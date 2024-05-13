@@ -1,0 +1,21 @@
+### GET /categories
+GET http://localhost:3000/categories
+
+### POST /category
+POST http://localhost:3000/category
+Content-Type: application/json
+
+{
+  "category_name": "Category A"
+}
+
+### PUT /category/:id
+PUT http://localhost:3000/category/1
+Content-Type: application/json
+
+{
+  "category_name": "Updated Category A"
+}
+
+### DELETE /category/:id
+DELETE http://localhost:3000/category/1

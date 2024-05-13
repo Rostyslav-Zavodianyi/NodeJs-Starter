@@ -1,0 +1,9 @@
+
+### POST test data
+POST http://localhost:3000/testData
+
+### GET 1NT
+GET http://localhost:3000/1NT/5
+
+### GET user stats
+GET http://localhost:3000/userStats/6

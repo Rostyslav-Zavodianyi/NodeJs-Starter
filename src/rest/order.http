@@ -1,0 +1,33 @@
+### GET /orders
+GET http://localhost:3000/orders
+
+### POST /order
+POST http://localhost:3000/order
+Content-Type: application/json
+
+{
+  "user_id": 1,
+  "product_id": 1,
+  "quantity": 2
+}
+
+### PUT /order/:id
+PUT http://localhost:3000/order/1
+Content-Type: application/json
+
+{
+  "user_id": 1,
+  "product_id": 1,
+  "quantity": 3
+}
+
+### PATCH /order/:id
+PATCH http://localhost:3000/order/1
+Content-Type: application/json
+
+{
+  "quantity": 4
+}
+
+### DELETE /order/:id
+DELETE http://localhost:3000/order/1

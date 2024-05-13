@@ -1,0 +1,35 @@
+### GET /users
+GET http://localhost:3000/users
+
+### POST /user
+POST http://localhost:3000/user
+Content-Type: application/json
+
+{
+  "name": "John Doe the second",
+  "age": 30,
+  "phone": "123-456-7890",
+  "email": "john.doe@example.com"
+}
+
+### PUT /user/:id
+PUT http://localhost:3000/user/1
+Content-Type: application/json
+
+{
+  "name": "Updated Name",
+  "age": 35,
+  "phone": "123-456-7890",
+  "email": "john.doe@example.com"
+}
+
+### DELETE /user/:id
+DELETE http://localhost:3000/user/1
+
+### PATCH /user/:id
+PATCH http://localhost:3000/user/1
+Content-Type: application/json
+
+{
+  "age": 40
+}
