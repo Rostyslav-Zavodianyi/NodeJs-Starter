@@ -1,18 +1,11 @@
 import { Request, Response } from "express";
-import { pool } from "../../db";
+import { ProductRepository } from "../../db";
 
-const getProducts = async (req: Request, res: Response): Promise<void> => {
+export const getProducts = async (req: Request, res: Response) => {
   try {
-    const client = await pool.connect();
-    const result = await client.query(
-      "SELECT * FROM products ORDER BY product_id"
-    );
-    client.release();
-    res.status(200).json(result.rows);
+    const products = await ProductRepository.find();
+    res.json(products);
   } catch (error) {
-    console.error("Error fetching products:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(500).json({ error: "Error fetching products" });
   }
 };
-
-export { getProducts };

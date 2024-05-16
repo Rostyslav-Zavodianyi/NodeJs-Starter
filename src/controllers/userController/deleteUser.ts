@@ -1,24 +1,21 @@
 import { Request, Response } from "express";
-import { pool } from "../../db";
+import { UserRepository } from "../../db";
 
-const deleteUser = async (req: Request, res: Response): Promise<void> => {
+export const deleteUser = async (req: Request, res: Response) => {
   const userId = req.params.id;
 
   try {
-    const client = await pool.connect();
-    const result = await client.query("DELETE FROM users WHERE id=$1", [
-      userId,
-    ]);
-    client.release();
-    if (result.rowCount === 0) {
-      res.status(404).json({ message: "User not found" });
-      return;
+    let userToDelete = await UserRepository.findOne({
+      where: { id: parseInt(userId, 10) },
+    });
+
+    if (!userToDelete) {
+      return res.status(404).json({ error: "User not found" });
     }
-    res.status(204).end();
+
+    await UserRepository.remove(userToDelete);
+    res.json({ message: "User deleted successfully" });
   } catch (error) {
-    console.error("Error deleting user:", error);
-    res.status(500).json({ message: "Error deleting user" });
+    res.status(500).json({ error: "Error deleting user" });
   }
 };
-
-export { deleteUser };

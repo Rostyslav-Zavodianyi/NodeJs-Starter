@@ -1,25 +1,15 @@
 import { Request, Response } from "express";
-import { pool } from "../../db";
+import { CategoryRepository, Manager } from "../../db";
 
-const createCategory = async (req: Request, res: Response): Promise<void> => {
-  const { category_name } = req.body;
-  if (!category_name) {
-    res.status(400).send("Category name is required");
-    return;
-  }
+export const createCategory = async (req: Request, res: Response) => {
+  const { name } = req.body;
 
   try {
-    const client = await pool.connect();
-    const result = await client.query(
-      "INSERT INTO categories (category_name) VALUES ($1) RETURNING *",
-      [category_name]
-    );
-    client.release();
-    res.status(201).json(result.rows[0]);
+    const newCategory = await CategoryRepository.create({ name });
+    newCategory.products = [];
+    await CategoryRepository.save(newCategory);
+    res.status(201).json(newCategory);
   } catch (error) {
-    console.error("Error creating category:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(500).json({ error: "Error creating category " + error });
   }
 };
-
-export { createCategory };

@@ -5,6 +5,8 @@
       "outDir": "dist/js",
       "rootDir": "src",
       "strict": true,
+      "experimentalDecorators": true,
+      "emitDecoratorMetadata": true,
       "esModuleInterop": true,
       "noImplicitAny": true,
       "forceConsistentCasingInFileNames": true

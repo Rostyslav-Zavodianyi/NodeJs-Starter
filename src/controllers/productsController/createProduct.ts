@@ -1,27 +1,25 @@
 import { Request, Response } from "express";
-import { pool } from "../../db";
+import { CategoryRepository, ProductRepository } from "../../db";
+import { Category } from "../../models/Category";
+import { Product } from "../../models/Product";
 
-const createProduct = async (req: Request, res: Response): Promise<void> => {
-  const { category_id, product_name, price } = req.body;
-  if (!category_id || !product_name || !price) {
-    res
-      .status(400)
-      .send("All fields (category_id, product_name, price) are required");
-    return;
-  }
+export const createProduct = async (req: Request, res: Response) => {
+  const { category_id, name, price } = req.body;
 
   try {
-    const client = await pool.connect();
-    const result = await client.query(
-      "INSERT INTO products (category_id, product_name, price) VALUES ($1, $2, $3) RETURNING *",
-      [category_id, product_name, price]
-    );
-    client.release();
-    res.status(201).json(result.rows[0]);
+    const category = await CategoryRepository.findOne({
+      where: { id: parseInt(category_id, 10) },
+    });
+
+    if (!category) {
+      res.status(404).json({ error: "Category not found" });
+    }
+    const newProduct = ProductRepository.create({ name, price });
+    newProduct.category = category!;
+    newProduct.orders = [];
+    await ProductRepository.save(newProduct);
+    res.status(201).json(newProduct);
   } catch (error) {
-    console.error("Error creating product:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(500).json({ error: "Error creating product " + error });
   }
 };
-
-export { createProduct };

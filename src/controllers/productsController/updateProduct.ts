@@ -1,28 +1,29 @@
 import { Request, Response } from "express";
-import { pool } from "../../db";
+import { CategoryRepository, ProductRepository } from "../../db";
 
-const updateProduct = async (req: Request, res: Response): Promise<void> => {
-  const productId = parseInt(req.params.id, 10);
-  const { category_id, product_name, price } = req.body;
-  if (!category_id || !product_name || !price) {
-    res
-      .status(400)
-      .send("All fields (category_id, product_name, price) are required");
-    return;
-  }
-
+export const updateProduct = async (req: Request, res: Response) => {
+  const productId = req.params.id;
+  const { category_id, name, price } = req.body;
+  const category = await CategoryRepository.findOne({
+    where: { id: parseInt(category_id, 10) },
+  });
+  if (!category || !name || !price)
+    return res.status(404).json({ error: "Error updating product" });
   try {
-    const client = await pool.connect();
-    const result = await client.query(
-      "UPDATE products SET category_id = $1, product_name = $2, price = $3 WHERE product_id = $4 RETURNING *",
-      [category_id, product_name, price, productId]
-    );
-    client.release();
-    res.status(200).json(result.rows[0]);
+    let productToUpdate = await ProductRepository.findOne({
+      where: { id: parseInt(productId, 10) },
+    });
+
+    if (!productToUpdate) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    productToUpdate.name = name;
+    productToUpdate.price = price;
+    productToUpdate.category = category;
+    await ProductRepository.save(productToUpdate);
+    res.json(productToUpdate);
   } catch (error) {
-    console.error("Error updating product:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(500).json({ error: "Error updating product" });
   }
 };
-
-export { updateProduct };

@@ -6,4 +6,4 @@ POST http://localhost:3000/testData
 GET http://localhost:3000/1NT/5
 
 ### GET user stats
-GET http://localhost:3000/userStats/6
+GET http://localhost:3000/userStats/5

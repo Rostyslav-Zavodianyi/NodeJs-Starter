@@ -1,18 +1,21 @@
 import { Request, Response } from "express";
-import { pool } from "../../db";
+import { OrderRepository } from "../../db";
 
-const deleteOrder = async (req: Request, res: Response): Promise<void> => {
-  const orderId = parseInt(req.params.id, 10);
+export const deleteOrder = async (req: Request, res: Response) => {
+  const orderId = req.params.id;
 
   try {
-    const client = await pool.connect();
-    await client.query("DELETE FROM orders WHERE order_id = $1", [orderId]);
-    client.release();
-    res.status(204).send(); // No content sent back after successful deletion
+    let orderToDelete = await OrderRepository.findOne({
+      where: { id: parseInt(orderId, 10) },
+    });
+
+    if (!orderToDelete) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    await OrderRepository.remove(orderToDelete);
+    res.json({ message: "Order deleted successfully" });
   } catch (error) {
-    console.error("Error deleting order:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(500).json({ error: "Error deleting product" });
   }
 };
-
-export { deleteOrder };

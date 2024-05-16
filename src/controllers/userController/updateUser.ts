@@ -1,26 +1,31 @@
 import { Request, Response } from "express";
-import { pool } from "../../db";
+import { UserRepository } from "../../db";
 
-const updateUser = async (req: Request, res: Response): Promise<void> => {
+export const updateUser = async (req: Request, res: Response) => {
   const userId = req.params.id;
   const { name, age, phone, email } = req.body;
 
+  if (!name || !age || !phone || !email) {
+    return res.status(404).json({ error: "Not enough fields found" });
+  }
+
   try {
-    const client = await pool.connect();
-    const result = await client.query(
-      "UPDATE users SET name=$1, age=$2, phone=$3, email=$4 WHERE id=$5 RETURNING *",
-      [name, age, phone, email, userId]
-    );
-    client.release();
-    if (!result.rows[0]) {
-      res.status(404).json({ message: "User not found" });
-      return;
+    let userToUpdate = await UserRepository.findOne({
+      where: { id: parseInt(userId, 10) },
+    });
+
+    if (!userToUpdate) {
+      return res.status(404).json({ error: "User not found" });
     }
-    res.status(200).json(result.rows[0]);
+
+    userToUpdate.name = name;
+    userToUpdate.age = age;
+    userToUpdate.phone = phone;
+    userToUpdate.email = email;
+
+    await UserRepository.save(userToUpdate);
+    res.json(userToUpdate);
   } catch (error) {
-    console.error("Error updating user:", error);
-    res.status(500).json({ message: "Error updating user" });
+    res.status(500).json({ error: "Error updating user" });
   }
 };
-
-export { updateUser };

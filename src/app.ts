@@ -1,3 +1,5 @@
+import "reflect-metadata";
+import { myDataSource } from "./db";
 import express, { Request, Response, NextFunction } from "express";
 import helmet from "helmet";
 import userRoutes from "./controllers/userController/user";
@@ -5,10 +7,6 @@ import categoryRoutes from "./controllers/categoryController/category";
 import productRoutes from "./controllers/productsController/product";
 import orderRoutes from "./controllers/orderController/order";
 import generalRoutes from "./controllers/generalController/general";
-import User from "./models/user";
-import Category from "./models/category";
-import Product from "./models/product";
-import Order from "./models/order";
 
 const PORT: string | number = 3000;
 const allowCrossOrigin = (req: Request, res: Response, next: NextFunction) => {
@@ -33,20 +31,22 @@ app.use(productRoutes);
 app.use(orderRoutes);
 app.use(generalRoutes);
 
-const initializeDB = async () => {
-  try {
-    await User.initModel();
-    await Category.initModel();
-    await Product.initModel();
-    await Order.initModel();
-    console.log(`Postgres server running on 0.0.0.0:${process.env.DB_PORT}`);
-  } catch (error) {
-    console.error("Error initializ ing database:", error);
-  }
-};
+async function startServer() {
+  myDataSource
+    .initialize()
+    .then(() => {
+      console.log("Data Source has been initialized!");
+      console.log("Database connected");
+    })
+    .catch((err) => {
+      console.error("Error during Data Source initialization", err);
+    });
 
-initializeDB().then(() => {
   app.listen(PORT, () =>
     console.log(`Server running on http://localhost:${PORT}`)
   );
-});
+}
+
+startServer().catch((error) =>
+  console.log("TypeORM connection error: ", error)
+);

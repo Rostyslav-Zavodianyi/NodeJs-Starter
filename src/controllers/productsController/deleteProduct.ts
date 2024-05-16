@@ -1,20 +1,21 @@
 import { Request, Response } from "express";
-import { pool } from "../../db";
+import { ProductRepository } from "../../db";
 
-const deleteProduct = async (req: Request, res: Response): Promise<void> => {
-  const productId = parseInt(req.params.id, 10);
+export const deleteProduct = async (req: Request, res: Response) => {
+  const productId = req.params.id;
 
   try {
-    const client = await pool.connect();
-    await client.query("DELETE FROM products WHERE product_id = $1", [
-      productId,
-    ]);
-    client.release();
-    res.status(204).send();
+    let productToDelete = await ProductRepository.findOne({
+      where: { id: parseInt(productId, 10) },
+    });
+
+    if (!productToDelete) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    await ProductRepository.remove(productToDelete);
+    res.json({ message: "Product deleted successfully" });
   } catch (error) {
-    console.error("Error deleting product:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(500).json({ error: "Error deleting product" });
   }
 };
-
-export { deleteProduct };

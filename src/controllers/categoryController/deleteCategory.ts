@@ -1,20 +1,21 @@
 import { Request, Response } from "express";
-import { pool } from "../../db";
+import { CategoryRepository } from "../../db";
 
-const deleteCategory = async (req: Request, res: Response): Promise<void> => {
-  const categoryId = parseInt(req.params.id, 10);
+export const deleteCategory = async (req: Request, res: Response) => {
+  const categoryId = req.params.id;
 
   try {
-    const client = await pool.connect();
-    await client.query("DELETE FROM categories WHERE category_id = $1", [
-      categoryId,
-    ]);
-    client.release();
-    res.status(204).send(); // No content sent back after successful deletion
+    const categoryToRemove = await CategoryRepository.findOne({
+      where: { id: parseInt(categoryId, 10) },
+    });
+
+    if (!categoryToRemove) {
+      return res.status(404).json({ error: "Category not found" });
+    }
+
+    await CategoryRepository.remove(categoryToRemove);
+    res.json({ message: "Category deleted successfully" });
   } catch (error) {
-    console.error("Error deleting category:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(500).json({ error: "Error deleting category" });
   }
 };
-
-export { deleteCategory };

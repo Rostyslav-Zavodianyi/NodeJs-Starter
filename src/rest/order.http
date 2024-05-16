@@ -6,8 +6,8 @@ POST http://localhost:3000/order
 Content-Type: application/json
 
 {
-  "user_id": 1,
-  "product_id": 1,
+  "userId": 1,
+  "productId": 1,
   "quantity": 2
 }
 
@@ -16,8 +16,8 @@ PUT http://localhost:3000/order/1
 Content-Type: application/json
 
 {
-  "user_id": 1,
-  "product_id": 1,
+  "userId": 1,
+  "productId": 1,
   "quantity": 3
 }
 
@@ -26,7 +26,7 @@ PATCH http://localhost:3000/order/1
 Content-Type: application/json
 
 {
-  "quantity": 4
+  "quantity": 6
 }
 
 ### DELETE /order/:id

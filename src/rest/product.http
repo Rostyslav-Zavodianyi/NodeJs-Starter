@@ -7,27 +7,28 @@ Content-Type: application/json
 
 {
   "category_id": 1,
-  "product_name": "Product A",
+  "name": "Product A",
   "price": 50.99
 }
 
 ### PUT /product/:id
-PUT http://localhost:3000/product/1
+PUT http://localhost:3000/product/3
 Content-Type: application/json
 
 {
-  "category_id": 1,
-  "product_name": "Updated Product A",
-  "price": 55.99
+  "category_id": 4,
+  "name": "Updated Product B",
+  "price": 5
 }
 
 ### PATCH /product/:id
-PATCH http://localhost:3000/product/1
+PATCH http://localhost:3000/product/2
 Content-Type: application/json
 
 {
+  "category_id": 2,
   "price": 60.99
 }
 
 ### DELETE /product/:id
-DELETE http://localhost:3000/product/1
+DELETE http://localhost:3000/product/2

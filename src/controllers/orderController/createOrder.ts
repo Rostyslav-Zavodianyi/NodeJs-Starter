@@ -1,27 +1,27 @@
 import { Request, Response } from "express";
-import { pool } from "../../db";
+import { OrderRepository, ProductRepository, UserRepository } from "../../db";
 
-const createOrder = async (req: Request, res: Response): Promise<void> => {
-  const { user_id, product_id, quantity } = req.body;
-  if (!user_id || !product_id || !quantity) {
-    res
-      .status(400)
-      .send("All fields (user_id, product_id, quantity) are required");
-    return;
-  }
+export const createOrder = async (req: Request, res: Response) => {
+  const { userId, productId, quantity } = req.body;
 
   try {
-    const client = await pool.connect();
-    const result = await client.query(
-      "INSERT INTO orders (user_id, product_id, quantity) VALUES ($1, $2, $3) RETURNING *",
-      [user_id, product_id, quantity]
-    );
-    client.release();
-    res.status(201).json(result.rows[0]);
+    const user = await UserRepository.findOne({
+      where: { id: parseInt(userId, 10) },
+    });
+    const product = await ProductRepository.findOne({
+      where: { id: parseInt(productId, 10) },
+    });
+
+    if (!user || !product || !quantity) {
+      return res.status(404).json({ error: "User or Product not found" });
+    }
+    const newOrder = await OrderRepository.create();
+    newOrder.product = product;
+    newOrder.user = user;
+    newOrder.quantity = quantity;
+    await OrderRepository.save(newOrder);
+    res.status(201).json(newOrder);
   } catch (error) {
-    console.error("Error creating order:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(500).json({ error: "Error creating order " + error });
   }
 };
-
-export { createOrder };

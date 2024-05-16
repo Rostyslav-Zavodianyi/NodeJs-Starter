@@ -1,75 +1,71 @@
 import { Request, Response } from "express";
-import { pool } from "../../db";
+import {
+  CategoryRepository,
+  ProductRepository,
+  UserRepository,
+  OrderRepository,
+} from "../../db";
+import { Category } from "../../models/Category";
+import { Product } from "../../models/Product";
+import { User } from "../../models/User";
+import { Order } from "../../models/Order";
 
-const seedTestData = async (req: Request, res: Response): Promise<void> => {
+export const seedTestData = async (req: Request, res: Response) => {
   try {
-    const client = await pool.connect();
-
-    for (let i = 1; i <= 10; i++) {
-      await client.query(
-        "INSERT INTO users (name, age, phone, email) VALUES ($1, $2, $3, $4)",
-        [
-          `User${i}`,
-          getRandomInt(20, 50),
-          `123-456-78${i}9`,
-          `user${i}@example.com`,
-        ]
-      );
+    const categories: Category[] = [];
+    for (let i = 0; i < 15; i++) {
+      const category = CategoryRepository.create({ name: `Category ${i + 1}` });
+      category.products = [];
+      categories.push(category);
     }
+    await CategoryRepository.save(categories);
 
-    const categories = [
-      "Electronics",
-      "Clothing",
-      "Books",
-      "Toys",
-      "Home Goods",
-    ];
-    for (let i = 0; i < categories.length; i++) {
-      await client.query("INSERT INTO categories (category_name) VALUES ($1)", [
-        categories[i],
-      ]);
+    const products: Product[] = [];
+    for (let i = 0; i < 15; i++) {
+      const categoryIndex = Math.floor(Math.random() * categories.length);
+      const product = ProductRepository.create({
+        name: `Product ${i + 1}`,
+        price: Math.floor(Math.random() * 100) + 1,
+        category: categories[categoryIndex],
+      });
+      product.orders = [];
+      products.push(product);
+      categories[categoryIndex].products.push(product);
     }
+    await ProductRepository.save(products);
 
-    const products = [
-      { name: "Laptop", price: 1200 },
-      { name: "T-shirt", price: 20 },
-      { name: "Book", price: 15 },
-      { name: "Toy Car", price: 30 },
-      { name: "Couch", price: 500 },
-      { name: "Smartphone", price: 800 },
-      { name: "Jeans", price: 40 },
-      { name: "Novel", price: 10 },
-      { name: "Board Game", price: 25 },
-      { name: "Desk", price: 200 },
-    ];
-    for (let i = 0; i < products.length; i++) {
-      const categoryId = getRandomInt(1, categories.length);
-      await client.query(
-        "INSERT INTO products (category_id, product_name, price) VALUES ($1, $2, $3)",
-        [categoryId, products[i].name, products[i].price]
-      );
+    const users: User[] = [];
+    for (let i = 0; i < 15; i++) {
+      const user = UserRepository.create({
+        name: `User ${i + 1}`,
+        age: Math.floor(Math.random() * 60) + 18,
+        phone: `123-456-78${i}`,
+        email: `user${i + 1}@example.com`,
+      });
+      user.orders = [];
+      users.push(user);
     }
+    await UserRepository.save(users);
 
-    for (let i = 1; i <= 10; i++) {
-      const userId = getRandomInt(1, 10);
-      const productId = getRandomInt(1, products.length);
-      const quantity = getRandomInt(1, 5);
-      await client.query(
-        "INSERT INTO orders (user_id, product_id, quantity) VALUES ($1, $2, $3)",
-        [userId, productId, quantity]
-      );
+    const orders: Order[] = [];
+    for (let i = 0; i < 15; i++) {
+      const userIndex = Math.floor(Math.random() * users.length);
+      const productIndex = Math.floor(Math.random() * products.length);
+      const order = OrderRepository.create({
+        user: users[userIndex],
+        product: products[productIndex],
+        quantity: Math.floor(Math.random() * 10) + 1,
+      });
+      orders.push(order);
+      users[userIndex].orders.push(order);
+      products[productIndex].orders.push(order);
     }
+    await OrderRepository.save(orders);
+    await UserRepository.save(users);
+    await ProductRepository.save(products);
 
-    client.release();
-    res.status(201).send("Test data seeded successfully!");
+    res.status(201).json({ message: "Test data seeded successfully" });
   } catch (error) {
-    console.error("Error seeding test data:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(500).json({ error: "Error seeding test data " + error });
   }
 };
-
-function getRandomInt(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-export { seedTestData };

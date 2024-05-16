@@ -1,18 +1,11 @@
 import { Request, Response } from "express";
-import { pool } from "../../db";
+import { CategoryRepository } from "../../db";
 
-const getCategories = async (req: Request, res: Response): Promise<void> => {
+export const getCategories = async (req: Request, res: Response) => {
   try {
-    const client = await pool.connect();
-    const result = await client.query(
-      "SELECT * FROM categories ORDER BY category_id"
-    );
-    client.release();
-    res.status(200).json(result.rows);
+    const categories = await CategoryRepository.find();
+    res.json(categories);
   } catch (error) {
-    console.error("Error fetching categories:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(500).json({ error: "Error fetching categories" });
   }
 };
-
-export { getCategories };

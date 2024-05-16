@@ -1,53 +1,43 @@
 import { Request, Response } from "express";
-import { pool } from "../../db";
+import { OrderRepository } from "../../db";
 
-const getFirstNormalTable = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const getFirstNormalTable = async (req: Request, res: Response) => {
+  const page = parseInt(req.params.page, 10);
+  const itemsPerPage = 3;
+  const offset = (page - 1) * itemsPerPage;
+
   try {
-    const { page } = req.params;
-    const pageSize = 2;
-    const offset = (parseInt(page) - 1) * pageSize;
+    const [orders, total] = await OrderRepository.findAndCount({
+      relations: ["user", "product", "product.category"],
+      take: itemsPerPage,
+      skip: offset,
+      order: {
+        id: "ASC",
+      },
+    });
 
-    const client = await pool.connect();
+    const result = orders.map((order) => ({
+      userName: order.user.name,
+      userAge: order.user.age,
+      userPhone: order.user.phone,
+      userEmail: order.user.email,
+      Name: order.product.category.name,
+      productName: order.product.name,
+      quantity: order.quantity,
+      productPrice: order.product.price,
+      total: order.product.price * order.quantity,
+    }));
 
-    const query = `
-        SELECT 
-          u.id AS user_id,
-          u.name AS user_name, 
-          u.age AS user_age, 
-          u.phone AS user_phone, 
-          u.email AS user_email, 
-          c.category_name AS category_name, 
-          p.product_name AS product_name, 
-          p.price AS product_price, 
-          o.quantity AS order_quantity
-        FROM 
-          orders o
-        JOIN 
-          users u ON o.user_id = u.id
-        JOIN 
-          products p ON o.product_id = p.product_id
-        JOIN 
-          categories c ON p.category_id = c.category_id
-        ORDER BY 
-          u.name ASC
-        LIMIT 
-          ${pageSize}
-        OFFSET 
-          ${offset}
-      `;
-
-    const result = await client.query(query);
-    const firstNormalTableData = result.rows;
-
-    client.release();
-    res.status(200).json({ firstNormalTableData });
+    res.status(200).json({
+      data: result,
+      pagination: {
+        currentPage: page,
+        itemsPerPage,
+        totalItems: total,
+        totalPages: Math.ceil(total / itemsPerPage),
+      },
+    });
   } catch (error) {
-    console.error("Error fetching data for the first normal table:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(500).json({ error: "Error fetching data " + error });
   }
 };
-
-export { getFirstNormalTable };
